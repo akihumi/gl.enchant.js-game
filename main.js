@@ -3,7 +3,7 @@ enchant();
 var game;
 window.addEventListener('load', function(){
     game = new Game(640, 640);
-    game.preload('enchant.png', 'tibi.png');
+    game.preload('enchant.png', 'tibi.png', 'earth.png');
     game.fps = 60;
     game.addEventListener('load', function(){
         // create 3D scene
@@ -15,29 +15,12 @@ window.addEventListener('load', function(){
         scene.setDirectionalLight(light);
         // create camera
         var camera = new Camera3D();
-        // camera.x = 0;
-        // camera.y = 0;
-        // camera.z = -15;
         camera.centerZ = 200;
         scene.setCamera(camera);
         // create Sphere
         // for(var i = 0; i < 100; i++){
         //     new Obstacle(scene, camera);
         // }
-        // new Obstacle(scene, camera);
-        // var s = new Sphere(1);
-        // s.x = 0;
-        // s.y = 0;
-        // s.z = 10;
-        // scene.addChild(s);
-        // new Obstacle(scene, camera);
-        // var v = new Sphere(1);
-        // v.x = 5;
-        // v.y = 5;
-        // v.z = 20;
-        // scene.addChild(v);
-        
-        // 
         game.rootScene.addEventListener('enterframe', function(e){
             var input = game.input;
             if(input.left){ camera.sidestep(0.1); camera.x += 0.1;}
@@ -64,9 +47,10 @@ var Obj = enchant.Class.create(enchant.gl.primitive.Sphere, {
         this.mesh.ambient = [0.3, 0.3, 0.3, 1.0];
         this.mesh.diffuse = [0.5,0.5, 0.5, 1.0];
         this.mesh.specular = [0.5, 0.5, 0.5, 1.0];
+        // オブジェクトをゆっくり回転させる
         this.addEventListener('enterframe', function(e){
             mat4.identity(this.matrix);
-            this.theta += 0.01;
+            this.theta += 0.05;
             mat4.rotateY(this.matrix, this.theta);
             this.rotation = this.matrix;
         });
@@ -87,14 +71,12 @@ var Obstacle = enchant.Class.create(Obj, {
         this.matrix = new mat4.create();
         // this.mesh.setBaseColor("#f18b8c");
         // テクスチャをつける
-        this.mesh.texture = new Texture('tibi.png');
+        this.mesh.texture = new Texture('earth.png');
         this.addEventListener('enterframe', function(e){
             this.az -= 0.1;
             this.z += this.az;
             if(this.z < camera.z){
                 this.remove(scene);
-                alert("x: " + this.x + "y: " + this.y);
-                
             }
         });
     }
