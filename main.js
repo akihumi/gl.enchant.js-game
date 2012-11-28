@@ -18,11 +18,11 @@ window.addEventListener('load', function(){
         camera.centerZ = 200;
         scene.setCamera(camera);
         // create obstacle
-        // for(var i = 0; i < 100; i++){
-        //     var obstacle = new Obstacle(scene, camera);
-        //     obstacles.push(obstacle);
-        //     obstacles[i].key = i;
-        // }
+        for(var i = 0; i < 100; i++){
+            var obstacle = new Obstacle(scene, camera);
+            obstacle.key = i;
+            obstacles.push(obstacle);
+        }
         // create Sphere
 //========================================================
         // 中心
@@ -55,23 +55,24 @@ window.addEventListener('load', function(){
 var Obj = enchant.Class.create(enchant.gl.primitive.Sphere, {
     initialize: function(scene, r){
         enchant.gl.primitive.Sphere.call(this, r);
+        var theta = 0;
+        var matrix = new mat4.create();
         this.az = 0;
-        this.theta = 0;
-        this.matrix = new mat4.create();
+        this.scene = scene;
         this.mesh.ambient = [0.3, 0.3, 0.3, 1.0];
         this.mesh.diffuse = [0.5,0.5, 0.5, 1.0];
         this.mesh.specular = [0.5, 0.5, 0.5, 1.0];
         // オブジェクトをゆっくり回転させる
         this.addEventListener('enterframe', function(e){
-            mat4.identity(this.matrix);
-            this.theta += 0.05;
-            mat4.rotateY(this.matrix, this.theta);
-            this.rotation = this.matrix;
+            mat4.identity(matrix);
+            theta += 0.05;
+            mat4.rotateY(matrix, theta);
+            this.rotation = matrix;
         });
         scene.addChild(this);
     },
-    remove: function(scene){
-        scene.removeChild(this);
+    remove: function(){
+        this.scene.removeChild(this);
         delete this;
     }
 });
@@ -89,27 +90,24 @@ var Obstacle = enchant.Class.create(Obj, {
             z = 100 + Math.floor(Math.random() * 200);
         }
         // 大きさはランダムで
-        this.r = (Math.random() * 3).toFixed(1);
-        Obj.call(this, scene, this.r);
+        var r = (Math.random() * 3).toFixed(1);
+        Obj.call(this, scene, r);
         this.x = x;
         this.y = y;
         this.z = z;
         this.mesh.texture = new Texture('earth.png');
-        this.key = 0;
         this.addEventListener('enterframe', function(e){
             this.az -= 0.1;
             this.z += this.az;
             if(this.z < camera.z){
-                this.remove(scene);
+                var o = new Obstacle(scene, camera);
+                o.key = this.key;
+                obstacles[this.key] = o;
+                this.remove();
             }
         });
     },
-    key: function(i){
-        if(typeof i === 'undefined'){
-            return this.key;
-        }
-        this.key = i;
-    }
+    key: 0
 });
 
 var Shot = enchant.Class.create(Obj, {
@@ -118,15 +116,15 @@ var Shot = enchant.Class.create(Obj, {
             r = 0.1;
         }
         Obj.call(this, scene, r);
-        this.mesh.setBaseColor("#f18b8c");
         this.x = camera.x;
         this.y = camera.y - 1;
         this.z = camera.z + 5;
+        this.mesh.setBaseColor("#f18b8c");
         this.addEventListener('enterframe', function(e){
             this.az += 1;
             this.z += this.az;
             if(this.z > 500){
-                this.remove(scene);
+                this.remove();
             }
             
         });
