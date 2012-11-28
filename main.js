@@ -3,8 +3,8 @@ enchant();
 var obstacles = [];
 window.addEventListener('load', function(){
     var game = new Game(640, 640);
-    game.preload('tibi.png', 'earth.png');
-    game.fps = 30;
+    game.preload('earth.png');
+    game.fps = 24;
     game.addEventListener('load', function(){
         // create 3D scene
         var scene = new Scene3D();
@@ -18,7 +18,7 @@ window.addEventListener('load', function(){
         camera.centerZ = 200;
         scene.setCamera(camera);
         // create obstacle
-        for(var i = 0; i < 100; i++){
+        for(var i = 0; i < 50; i++){
             var obstacle = new Obstacle(scene, camera);
             obstacle.key = i;
             obstacles.push(obstacle);
@@ -40,12 +40,9 @@ window.addEventListener('load', function(){
             if(input.up){ camera.altitude(0.1); camera.y += 1; camera.centerY = camera.y;}
             if(input.down){ camera.altitude(-0.1); camera.y -= 1; camera.centerY = camera.y;}
             if(input.a){
-                if(game.frame % 5 == 0){
+                if(game.frame % 3 == 0){
                     new Shot(scene, camera);
                 }
-            }
-            if(game.frame % 60 == 0){
-                new Obstacle(scene, camera, camera.x, camera.y);
             }
         });
     },false);
@@ -65,7 +62,7 @@ var Obj = enchant.Class.create(enchant.gl.primitive.Sphere, {
         // オブジェクトをゆっくり回転させる
         this.addEventListener('enterframe', function(e){
             mat4.identity(matrix);
-            theta += 0.05;
+            theta += 0.1;
             mat4.rotateY(matrix, theta);
             this.rotation = matrix;
         });
@@ -80,53 +77,73 @@ var Obstacle = enchant.Class.create(Obj, {
     initialize: function(scene, camera, x, y, z){
         if(typeof x === 'undefined'){
             var diff = Math.floor(Math.random() * 2) == 0 ? 1 : -1;
-            x = camera.x + Math.floor(Math.random() * 50 *  diff);
+            x = camera.x + Math.floor(Math.random() * 30 *  diff);
         }
         if(typeof y === 'undefined'){
             var diff = Math.floor(Math.random() * 2) == 0 ? 1 : -1;
-            y = camera.y + Math.floor(Math.random() * 50 * diff);
+            y = camera.y + Math.floor(Math.random() * 30 * diff);
         }
         if(typeof z === 'undefined'){
             z = 100 + Math.floor(Math.random() * 200);
         }
         // 大きさはランダムで
-        var r = (Math.random() * 3).toFixed(1);
-        Obj.call(this, scene, r);
+        this.r = (Math.random() * 3).toFixed(1);
+        Obj.call(this, scene, this.r);
         this.x = x;
         this.y = y;
         this.z = z;
         this.mesh.texture = new Texture('earth.png');
         this.addEventListener('enterframe', function(e){
-            this.az -= 0.1;
+            this.az -= 0.3;
             this.z += this.az;
             if(this.z < camera.z){
-                var o = new Obstacle(scene, camera);
+                var o = null;
+                if(this.key == 0){
+                    o = new Obstacle(scene, camera, camera.x, camera.y, 200);
+                }else{
+                    o = new Obstacle(scene, camera);
+                }
                 o.key = this.key;
                 obstacles[this.key] = o;
                 this.remove();
             }
         });
     },
-    key: 0
+    key: 0,
 });
 
 var Shot = enchant.Class.create(Obj, {
     initialize: function(scene, camera, r){
         if(typeof r === 'undefined'){
-            r = 0.1;
+            r = 0.5;
         }
         Obj.call(this, scene, r);
         this.x = camera.x;
-        this.y = camera.y - 1;
+        this.y = camera.y - 0.5;
         this.z = camera.z + 5;
-        this.mesh.setBaseColor("#f18b8c");
+        this.mesh.setBaseColor("#f16b5c");
         this.addEventListener('enterframe', function(e){
-            this.az += 1;
+            this.az += 1.5;
             this.z += this.az;
+            for(var i = 0; i < obstacles.length; i++){
+                var ob = obstacles[i];
+                var hitarea = 17;
+                if(this.bounding.toBS(ob.bounding) < hitarea){
+                    var o = null;
+                    if(this.key == 0){
+                        o = new Obstacle(scene, camera, camera.x, camera.y, 200);
+                    }else{
+                        o = new Obstacle(scene, camera);
+                    }
+                    o.key = ob.key;
+                    obstacles[ob.key] = o;
+                    ob.remove();
+                    this.remove();
+                }
+            }
             if(this.z > 500){
                 this.remove();
             }
-            
         });
     }
 });
