@@ -55,19 +55,13 @@ window.addEventListener('load', function(){
             }
             // スペースキーが押されたら弾を発射
             if(input.a){
-                if(game.frame % 2 == 0){
-                    new Shot(scene);
-                    game.assets['audio/shot.wav'].play();
-                }
+                // if(game.frame % 2 == 0){
+                //     new Shot(scene);
+                //     game.assets['audio/shot.wav'].play();
+                // }
+                new Shot(scene);
+                game.assets['audio/shot.wav'].play();
             }
-            // 障害物に当たると終了
-            // for(var j = 0; j < obstacles.length; j++){
-            //     var ob = obstacles[j];
-            //     if(Math.pow(ob.x, 2) - Math.pow(camera.x, 2) == 0 && Math.pow(ob.y, 2) - Math.pow(camera.y, 2) == 0 && Math.pow(ob.z, 2) - Math.pow(camera.z, 2) < 5){
-            //         game.end("end!");
-            //         alert(camera.x +" "+ camera.y+" " + camera.z);
-            //     }
-        // }
         });
     }, false);
     game.start();
@@ -104,11 +98,11 @@ var Obstacle = enchant.Class.create(Obj, {
         this.camera = scene.getCamera();
         if(typeof x === 'undefined'){
             var diff = Math.floor(Math.random() * 2) == 0 ? 1 : -1;
-            x = this.camera.x + Math.floor(Math.random() * 30 *  diff);
+            x = this.camera.x + Math.floor(Math.random() * 20 *  diff);
         }
         if(typeof y === 'undefined'){
             var diff = Math.floor(Math.random() * 2) == 0 ? 1 : -1;
-            y = this.camera.y + Math.floor(Math.random() * 30 * diff);
+            y = this.camera.y + Math.floor(Math.random() * 20 * diff);
         }
         if(typeof z === 'undefined'){
             z = 100 + Math.floor(Math.random() * 200);
@@ -124,6 +118,10 @@ var Obstacle = enchant.Class.create(Obj, {
             this.az -= 0.3;
             this.z += this.az;
             if(this.z < this.camera.z){
+                // 障害物に当たると終了
+                if(Math.abs(this.x - this.camera.x) < 2 && Math.abs(this.y - this.camera.y) < 2){
+                    game.end("end!");
+                }
                 var o = null;
                 if(this.key == 0){
                     o = new Obstacle(scene, this.camera.x, this.camera.y, 200);
