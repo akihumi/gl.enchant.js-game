@@ -28,13 +28,14 @@ window.addEventListener('load', function(){
         // create obstacle
         obstacles.flag = true;
         for(var i = 0; i < 50; i++){
-            var obstacle = new Obstacle(scene, camera);
+            var obstacle = new Obstacle(scene);
             obstacle.key = i;
             obstacles.push(obstacle);
         }
 
         game.keybind(32, "a");
         game.rootScene.addEventListener('enterframe', function(e){
+            // なんかかってに始まるので苦肉の策
             if(obstacles.flag){
                 for(var i = 0; i < obstacles.length; i++){
                     obstacles[i].start();
@@ -52,12 +53,21 @@ window.addEventListener('load', function(){
             }else if(input.down){
                 camera.altitude(-0.1); camera.y -= 1; camera.centerY = camera.y;
             }
+            // スペースキーが押されたら弾を発射
             if(input.a){
                 if(game.frame % 2 == 0){
-                    new Shot(scene, camera);
+                    new Shot(scene);
                     game.assets['audio/shot.wav'].play();
                 }
             }
+            // 障害物に当たると終了
+            // for(var j = 0; j < obstacles.length; j++){
+            //     var ob = obstacles[j];
+            //     if(Math.pow(ob.x, 2) - Math.pow(camera.x, 2) == 0 && Math.pow(ob.y, 2) - Math.pow(camera.y, 2) == 0 && Math.pow(ob.z, 2) - Math.pow(camera.z, 2) < 5){
+            //         game.end("end!");
+            //         alert(camera.x +" "+ camera.y+" " + camera.z);
+            //     }
+        // }
         });
     }, false);
     game.start();
@@ -90,14 +100,15 @@ var Obj = enchant.Class.create(enchant.gl.primitive.Sphere, {
     }
 });
 var Obstacle = enchant.Class.create(Obj, {
-    initialize: function(scene, camera, x, y, z){
+    initialize: function(scene, x, y, z){
+        this.camera = scene.getCamera();
         if(typeof x === 'undefined'){
             var diff = Math.floor(Math.random() * 2) == 0 ? 1 : -1;
-            x = camera.x + Math.floor(Math.random() * 30 *  diff);
+            x = this.camera.x + Math.floor(Math.random() * 30 *  diff);
         }
         if(typeof y === 'undefined'){
             var diff = Math.floor(Math.random() * 2) == 0 ? 1 : -1;
-            y = camera.y + Math.floor(Math.random() * 30 * diff);
+            y = this.camera.y + Math.floor(Math.random() * 30 * diff);
         }
         if(typeof z === 'undefined'){
             z = 100 + Math.floor(Math.random() * 200);
@@ -112,12 +123,12 @@ var Obstacle = enchant.Class.create(Obj, {
         this.addEventListener('enterframe', function(e){
             this.az -= 0.3;
             this.z += this.az;
-            if(this.z < camera.z){
+            if(this.z < this.camera.z){
                 var o = null;
                 if(this.key == 0){
-                    o = new Obstacle(scene, camera, camera.x, camera.y, 200);
+                    o = new Obstacle(scene, this.camera.x, this.camera.y, 200);
                 }else{
-                    o = new Obstacle(scene, camera);
+                    o = new Obstacle(scene);
                 }
                 o.key = this.key;
                 obstacles[this.key] = o;
@@ -130,14 +141,15 @@ var Obstacle = enchant.Class.create(Obj, {
 });
 
 var Shot = enchant.Class.create(Obj, {
-    initialize: function(scene, camera, r){
+    initialize: function(scene, r){
         if(typeof r === 'undefined'){
             r = 1;
         }
         Obj.call(this, scene, r);
-        this.x = camera.x;
-        this.y = camera.y - 1;
-        this.z = camera.z + 5;
+        this.camera = scene.getCamera();
+        this.x = this.camera.x;
+        this.y = this.camera.y - 1;
+        this.z = this.camera.z + 5;
         this.mesh.setBaseColor("#f16b5c");
         this.addEventListener('enterframe', function(e){
             this.az += 1.5;
@@ -148,9 +160,9 @@ var Shot = enchant.Class.create(Obj, {
                 if(this.bounding.toBS(ob.bounding) < hitarea){
                     var o = null;
                     if(this.key == 0){
-                        o = new Obstacle(scene, camera, camera.x, camera.y, 200);
+                        o = new Obstacle(scene, this.camera.x, this.camera.y, 200);
                     }else{
-                        o = new Obstacle(scene, camera);
+                        o = new Obstacle(scene);
                     }
                     o.key = ob.key;
                     obstacles[ob.key] = o;
