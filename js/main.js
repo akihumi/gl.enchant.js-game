@@ -26,22 +26,21 @@ window.addEventListener('load', function(){
         camera.centerZ = 200;
         scene.setCamera(camera);
         // create obstacle
+        obstacles.flag = true;
         for(var i = 0; i < 50; i++){
             var obstacle = new Obstacle(scene, camera);
             obstacle.key = i;
             obstacles.push(obstacle);
         }
-        // create Sphere
-//========================================================
-        // 中心
-        var sphere5 = new Sphere();
-        sphere5.x = 0; sphere5.y = 0; sphere5.z = 50;
-        sphere5.mesh.setBaseColor("#ffffff");
-        scene.addChild(sphere5);
-        // スペースキーを発射ボタンにする
-//=======================================================
+
         game.keybind(32, "a");
         game.rootScene.addEventListener('enterframe', function(e){
+            if(obstacles.flag){
+                for(var i = 0; i < obstacles.length; i++){
+                    obstacles[i].start();
+                }
+                obstacles.flag = false;
+            }
             var input = game.input;
             if(input.left){
                 camera.sidestep(0.1); camera.x += 1; camera.centerX = camera.x;
@@ -60,7 +59,7 @@ window.addEventListener('load', function(){
                 }
             }
         });
-    },false);
+    }, false);
     game.start();
 }, false);
 
@@ -81,11 +80,13 @@ var Obj = enchant.Class.create(enchant.gl.primitive.Sphere, {
             mat4.rotateY(matrix, theta);
             this.rotation = matrix;
         });
-        scene.addChild(this);
     },
     remove: function(){
         this.scene.removeChild(this);
         delete this;
+    },
+    start: function(){
+        this.scene.addChild(this);
     }
 });
 var Obstacle = enchant.Class.create(Obj, {
@@ -120,6 +121,7 @@ var Obstacle = enchant.Class.create(Obj, {
                 }
                 o.key = this.key;
                 obstacles[this.key] = o;
+                obstacles[this.key].start();
                 this.remove();
             }
         });
@@ -152,6 +154,7 @@ var Shot = enchant.Class.create(Obj, {
                     }
                     o.key = ob.key;
                     obstacles[ob.key] = o;
+                    obstacles[ob.key].start();
                     ob.remove();
                     this.remove();
                     game.assets['audio/bomb.wav'].play();
@@ -161,5 +164,6 @@ var Shot = enchant.Class.create(Obj, {
                 this.remove();
             }
         });
+        this.start();
     }
 });
