@@ -1,11 +1,19 @@
 enchant();
 
 var obstacles = [];
+var game;
 window.addEventListener('load', function(){
-    var game = new Game(640, 640);
-    game.preload('earth.png');
+    game = new Game(640, 640);
+    game.preload('image/earth.png', 'image/sight.png', 'audio/bomb.wav', 'audio/shot.wav');
     game.fps = 24;
     game.addEventListener('load', function(){
+        var sight = Sprite(100,100);
+        sight.image = game.assets['image/sight.png'];
+        sight.frame = 0;
+        sight.width = sight.height = 100;
+        sight.x = (game.width / 2) - (sight.width / 2) - 1;
+        sight.y = (game.height/ 2) - (sight.height / 2) + 5;
+        game.rootScene.addChild(sight);
         // create 3D scene
         var scene = new Scene3D();
         // create light
@@ -35,13 +43,20 @@ window.addEventListener('load', function(){
         game.keybind(32, "a");
         game.rootScene.addEventListener('enterframe', function(e){
             var input = game.input;
-            if(input.left){ camera.sidestep(0.1); camera.x += 1; camera.centerX = camera.x;}
-            if(input.right){ camera.sidestep(-0.1); camera.x -= 1; camera.centerX = camera.x;}
-            if(input.up){ camera.altitude(0.1); camera.y += 1; camera.centerY = camera.y;}
-            if(input.down){ camera.altitude(-0.1); camera.y -= 1; camera.centerY = camera.y;}
+            if(input.left){
+                camera.sidestep(0.1); camera.x += 1; camera.centerX = camera.x;
+            }else if(input.right){
+                camera.sidestep(-0.1); camera.x -= 1; camera.centerX = camera.x;
+            }
+            if(input.up){ 
+                camera.altitude(0.1); camera.y += 1; camera.centerY = camera.y;
+            }else if(input.down){
+                camera.altitude(-0.1); camera.y -= 1; camera.centerY = camera.y;
+            }
             if(input.a){
-                if(game.frame % 3 == 0){
+                if(game.frame % 2 == 0){
                     new Shot(scene, camera);
+                    game.assets['audio/shot.wav'].play();
                 }
             }
         });
@@ -92,7 +107,7 @@ var Obstacle = enchant.Class.create(Obj, {
         this.x = x;
         this.y = y;
         this.z = z;
-        this.mesh.texture = new Texture('earth.png');
+        this.mesh.texture = new Texture('image/earth.png');
         this.addEventListener('enterframe', function(e){
             this.az -= 0.3;
             this.z += this.az;
@@ -115,11 +130,11 @@ var Obstacle = enchant.Class.create(Obj, {
 var Shot = enchant.Class.create(Obj, {
     initialize: function(scene, camera, r){
         if(typeof r === 'undefined'){
-            r = 0.5;
+            r = 1;
         }
         Obj.call(this, scene, r);
         this.x = camera.x;
-        this.y = camera.y - 0.5;
+        this.y = camera.y - 1;
         this.z = camera.z + 5;
         this.mesh.setBaseColor("#f16b5c");
         this.addEventListener('enterframe', function(e){
@@ -127,7 +142,7 @@ var Shot = enchant.Class.create(Obj, {
             this.z += this.az;
             for(var i = 0; i < obstacles.length; i++){
                 var ob = obstacles[i];
-                var hitarea = 17;
+                var hitarea = 20;
                 if(this.bounding.toBS(ob.bounding) < hitarea){
                     var o = null;
                     if(this.key == 0){
@@ -139,6 +154,7 @@ var Shot = enchant.Class.create(Obj, {
                     obstacles[ob.key] = o;
                     ob.remove();
                     this.remove();
+                    game.assets['audio/bomb.wav'].play();
                 }
             }
             if(this.z > 500){
