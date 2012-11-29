@@ -4,7 +4,7 @@ var obstacles = [];
 var game;
 window.addEventListener('load', function(){
     game = new Game(640, 640);
-    game.preload('image/earth.png', 'image/sight.png', 'audio/bomb.wav', 'audio/shot.wav');
+    game.preload('image/earth.png', 'image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg');
     game.fps = 24;
     game.addEventListener('load', function(){
         var sight = Sprite(100,100);
@@ -13,6 +13,7 @@ window.addEventListener('load', function(){
         sight.width = sight.height = 100;
         sight.x = (game.width / 2) - (sight.width / 2) - 1;
         sight.y = (game.height/ 2) - (sight.height / 2) + 5;
+        sight.opacity = 0.5
         game.rootScene.addChild(sight);
         // create 3D scene
         var scene = new Scene3D();
@@ -55,12 +56,8 @@ window.addEventListener('load', function(){
             }
             // スペースキーが押されたら弾を発射
             if(input.a){
-                // if(game.frame % 2 == 0){
-                //     new Shot(scene);
-                //     game.assets['audio/shot.wav'].play();
-                // }
                 new Shot(scene);
-                game.assets['audio/shot.wav'].play();
+                game.assets['audio/shot.ogg'].play();
             }
         });
     }, false);
@@ -120,6 +117,7 @@ var Obstacle = enchant.Class.create(Obj, {
             if(this.z < this.camera.z){
                 // 障害物に当たると終了
                 if(Math.abs(this.x - this.camera.x) < 2 && Math.abs(this.y - this.camera.y) < 2){
+                    game.assets['audio/gameover.ogg'].play();
                     game.end("end!");
                 }
                 var o = null;
@@ -167,7 +165,7 @@ var Shot = enchant.Class.create(Obj, {
                     obstacles[ob.key].start();
                     ob.remove();
                     this.remove();
-                    game.assets['audio/bomb.wav'].play();
+                    game.assets['audio/bomb.ogg'].play();
                 }
             }
             if(this.z > 500){
