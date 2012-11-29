@@ -12,7 +12,7 @@ window.addEventListener('load', function(){
         sight.frame = 0;
         sight.width = sight.height = 100;
         sight.x = (game.width / 2) - (sight.width / 2) - 1;
-        sight.y = (game.height/ 2) - (sight.height / 2) + 5;
+        sight.y = (game.height/ 2) - (sight.height / 2);
         sight.opacity = 0.5
         game.rootScene.addChild(sight);
         // create 3D scene
@@ -35,6 +35,7 @@ window.addEventListener('load', function(){
         }
 
         game.keybind(32, "a");
+        var pos = true;
         game.rootScene.addEventListener('enterframe', function(e){
             // なんかかってに始まるので苦肉の策
             if(obstacles.flag){
@@ -56,8 +57,9 @@ window.addEventListener('load', function(){
             }
             // スペースキーが押されたら弾を発射
             if(input.a){
-                new Shot(scene);
+                new Shot(scene, pos);
                 game.assets['audio/shot.ogg'].play();
+                pos = !pos;
             }
         });
     }, false);
@@ -66,6 +68,9 @@ window.addEventListener('load', function(){
 
 var Obj = enchant.Class.create(enchant.gl.primitive.Sphere, {
     initialize: function(scene, r){
+        if(typeof r === 'undefined'){
+            r = 1;
+        }
         enchant.gl.primitive.Sphere.call(this, r);
         var theta = 0;
         var matrix = new mat4.create();
@@ -137,19 +142,21 @@ var Obstacle = enchant.Class.create(Obj, {
 });
 
 var Shot = enchant.Class.create(Obj, {
-    initialize: function(scene, r){
-        if(typeof r === 'undefined'){
-            r = 1;
-        }
-        Obj.call(this, scene, r);
+    initialize: function(scene, flag){
+        var posx = flag ? 5 : -5;
+        var dx = flag ? -0.2 : 0.2;
+        Obj.call(this, scene);
         this.camera = scene.getCamera();
-        this.x = this.camera.x;
-        this.y = this.camera.y - 1;
-        this.z = this.camera.z + 5;
+        this.x = this.camera.x + posx;
+        this.y = this.camera.y;
+        this.z = this.camera.z + 10;
         this.mesh.setBaseColor("#f16b5c");
         this.addEventListener('enterframe', function(e){
             this.az += 1.5;
             this.z += this.az;
+            if(this.x != this.camera.x){
+                this.x += dx;
+            }
             for(var i = 0; i < obstacles.length; i++){
                 var ob = obstacles[i];
                 var hitarea = 20;
