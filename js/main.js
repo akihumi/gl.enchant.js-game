@@ -4,9 +4,13 @@ var obstacles = [];
 var game;
 window.addEventListener('load', function(){
     game = new Game(640, 640);
-    game.preload('image/earth.png', 'image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg');
+    game.preload('image/earth.png', 'image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg', 'audio/bomb1.ogg');
     game.fps = 24;
+    game.score = 0;
+    game.alive = true;
+    game.life = 3;
     game.addEventListener('load', function(){
+        // create sight
         var sight = Sprite(100,100);
         sight.image = game.assets['image/sight.png'];
         sight.frame = 0;
@@ -15,6 +19,33 @@ window.addEventListener('load', function(){
         sight.y = (game.height/ 2) - (sight.height / 2);
         sight.opacity = 0.5
         game.rootScene.addChild(sight);
+        // create score
+        var scorelabel = new Label("");
+        scorelabel.x = 150;
+        scorelabel.y = 8;
+        scorelabel.color = "#ffffff";
+        scorelabel.font = "20px Meta";
+        scorelabel.addEventListener('enterframe', function(){
+            this.text = "SCORE: " + game.score;
+        });
+        game.rootScene.addChild(scorelabel);
+        // create LIFE
+        var lifelabel = new Label("");
+        lifelabel.x = 8;
+        lifelabel.y = 8;
+        lifelabel.color = "#ffffff";
+        lifelabel.font = "20px Meta";
+        lifelabel.addEventListener('enterframe', function(){
+            this.life;
+            switch(game.life){
+            case 3: this.life = " ★ ★ ★"; break;
+            case 2: this.life = "★ ★"; break;
+            case 1: this.life = "★"; break;
+            case 0: this.life = ""; break;
+            }
+            this.text = "LIFE: " + this.life;
+        });
+        game.rootScene.addChild(lifelabel);
         // create 3D scene
         var scene = new Scene3D();
         // create light
@@ -27,7 +58,7 @@ window.addEventListener('load', function(){
         camera.centerZ = 200;
         scene.setCamera(camera);
         // create obstacle
-        obstacles.flag = true;
+        obstacles.init = true;
         for(var i = 0; i < 50; i++){
             var obstacle = new Obstacle(scene);
             obstacle.key = i;
@@ -38,11 +69,11 @@ window.addEventListener('load', function(){
         var pos = true;
         game.rootScene.addEventListener('enterframe', function(e){
             // なんかかってに始まるので苦肉の策
-            if(obstacles.flag){
+            if(obstacles.init){
                 for(var i = 0; i < obstacles.length; i++){
                     obstacles[i].start();
                 }
-                obstacles.flag = false;
+                obstacles.init = false;
             }
             var input = game.input;
             if(input.left){
@@ -115,15 +146,39 @@ var Obstacle = enchant.Class.create(Obj, {
         this.x = x;
         this.y = y;
         this.z = z;
-        this.mesh.texture = new Texture('image/earth.png');
+        this.mesh.setBaseColor("#7fffd4");
+        var userAgent = window.navigator.userAgent.toLowerCase();
+        if (userAgent.indexOf('chrome') == -1) {
+            this.mesh.texture = new Texture('image/earth.png');
+        }
         this.addEventListener('enterframe', function(e){
-            this.az -= 0.3;
+            if(game.score < 50){
+                this.az -= 0.3;
+            }else if(game.score < 100){
+                this.az -= 0.5;
+            }else if(game.score < 200){
+                this.az -= 1;
+            }else{
+                this.az -= 1.5;
+            }
             this.z += this.az;
             if(this.z < this.camera.z){
                 // 障害物に当たると終了
                 if(Math.abs(this.x - this.camera.x) < 2 && Math.abs(this.y - this.camera.y) < 2){
-                    game.assets['audio/gameover.ogg'].play();
-                    game.end("end!");
+                    game.life--;
+                    if(game.life == 0){
+                        if(game.alive){
+                            setTimeout(function(){
+                                game.assets['audio/gameover.ogg'].play();
+                                game.end(game.score, "あなたのスコアは" + game.score + "です");
+                                game.alive = false;
+                            }, 100);
+                        }
+                    }else{
+                        if(game.alive){
+                            game.assets['audio/bomb1.ogg'].play();
+                        }
+                    }
                 }
                 var o = null;
                 if(this.key == 0){
@@ -172,6 +227,7 @@ var Shot = enchant.Class.create(Obj, {
                     obstacles[ob.key].start();
                     ob.remove();
                     this.remove();
+                    game.score += 1;
                     game.assets['audio/bomb.ogg'].play();
                 }
             }
