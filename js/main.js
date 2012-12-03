@@ -4,8 +4,8 @@ var obstacles = [];
 var game;
 window.addEventListener('load', function(){
     game = new Game(320, 320);
-    // game.preload('image/earth.png', 'image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg', 'audio/bomb1.ogg');
-    game.preload('image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg', 'audio/bomb1.ogg');
+    game.preload('image/earth.png', 'image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg', 'audio/bomb1.ogg');
+    // game.preload('image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg', 'audio/bomb1.ogg');
     game.fps = 24;
     game.score = 0;
     game.alive = true;
@@ -172,10 +172,14 @@ var Obstacle = enchant.Class.create(Obj, {
         this.y = y;
         this.z = z;
         this.mesh.setBaseColor("#7fffd4");
-        // var userAgent = window.navigator.userAgent.toLowerCase();
-        // if (userAgent.indexOf('chrome') == -1) {
-        //     this.mesh.texture = new Texture('image/earth.png');
-        // }
+
+        var userAgent = window.navigator.userAgent.toLowerCase();
+        if (userAgent.indexOf('chrome') == -1) {
+            this.mesh.texture = new Texture(game.assets['image/earth.png']);
+            this.mesh.texture.ambient = [0.3, 0.3, 0.3, 1.0];
+            this.mesh.texture.diffuse = [0.5, 0.5, 0.5, 1.0];
+            this.mesh.texture.specular = [0.5, 0.5, 0.5, 1.0];
+        }
         this.addEventListener('enterframe', function(e){
             if(game.score < 50){
                 this.az -= 0.3;
