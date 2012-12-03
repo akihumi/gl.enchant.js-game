@@ -91,7 +91,7 @@ window.addEventListener('load', function(){
             obstacles.push(obstacle);
         }
 
-        game.keybind(32, "a");
+        game.keybind(90, "a");
         game.rootScene.addEventListener('enterframe', function(e){
             // なんかかってに始まるので苦肉の策
             if(obstacles.init){
