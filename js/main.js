@@ -3,12 +3,14 @@ enchant();
 var obstacles = [];
 var game;
 window.addEventListener('load', function(){
-    game = new Game(640, 640);
-    game.preload('image/earth.png', 'image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg', 'audio/bomb1.ogg');
+    game = new Game(320, 320);
+    // game.preload('image/earth.png', 'image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg', 'audio/bomb1.ogg');
+    game.preload('image/sight.png', 'audio/bomb.ogg', 'audio/shot.ogg', 'audio/gameover.ogg', 'audio/bomb1.ogg');
     game.fps = 24;
     game.score = 0;
     game.alive = true;
     game.life = 3;
+    game.pos = true;
     game.addEventListener('load', function(){
         // create sight
         var sight = Sprite(100,100);
@@ -19,22 +21,12 @@ window.addEventListener('load', function(){
         sight.y = (game.height/ 2) - (sight.height / 2);
         sight.opacity = 0.5
         game.rootScene.addChild(sight);
-        // create score
-        var scorelabel = new Label("");
-        scorelabel.x = 150;
-        scorelabel.y = 8;
-        scorelabel.color = "#ffffff";
-        scorelabel.font = "20px Meta";
-        scorelabel.addEventListener('enterframe', function(){
-            this.text = "SCORE: " + game.score;
-        });
-        game.rootScene.addChild(scorelabel);
         // create LIFE
         var lifelabel = new Label("");
         lifelabel.x = 8;
         lifelabel.y = 8;
         lifelabel.color = "#ffffff";
-        lifelabel.font = "20px Meta";
+        // lifelabel.font = "16px Meta";
         lifelabel.addEventListener('enterframe', function(){
             this.life;
             switch(game.life){
@@ -46,6 +38,40 @@ window.addEventListener('load', function(){
             this.text = "LIFE: " + this.life;
         });
         game.rootScene.addChild(lifelabel);
+        // create score
+        var scorelabel = new Label("");
+        scorelabel.x = 150;
+        scorelabel.y = 8;
+        scorelabel.color = "#ffffff";
+        // scorelabel.font = "16px Meta";
+        scorelabel.addEventListener('enterframe', function(){
+            this.text = "SCORE: " + game.score;
+        });
+        game.rootScene.addChild(scorelabel);
+        // create pad
+        var pad = new Pad();
+        pad.x = 0;
+        pad.y = 220;
+        pad.opacity =0.5;
+        game.rootScene.addChild(pad);
+        // create button
+        var button = new Button("shot", "light");
+        button.color = "#999999";
+        button.moveTo(245, 270);
+        button.addEventListener('touchstart', function(){
+            button.touch = true;
+        });
+        button.addEventListener('touchend', function(){
+            button.touch = false;
+        });
+        button.addEventListener('enterframe', function(){
+            if(button.touch){
+                new Shot(scene, game.pos);
+                game.assets['audio/shot.ogg'].play();
+                game.pos = !(game.pos);
+            }
+        });
+        game.rootScene.addChild(button);
         // create 3D scene
         var scene = new Scene3D();
         // create light
@@ -66,7 +92,6 @@ window.addEventListener('load', function(){
         }
 
         game.keybind(32, "a");
-        var pos = true;
         game.rootScene.addEventListener('enterframe', function(e){
             // なんかかってに始まるので苦肉の策
             if(obstacles.init){
@@ -88,9 +113,9 @@ window.addEventListener('load', function(){
             }
             // スペースキーが押されたら弾を発射
             if(input.a){
-                new Shot(scene, pos);
+                new Shot(scene, game.pos);
                 game.assets['audio/shot.ogg'].play();
-                pos = !pos;
+                game.pos = !(game.pos);
             }
         });
     }, false);
@@ -147,10 +172,10 @@ var Obstacle = enchant.Class.create(Obj, {
         this.y = y;
         this.z = z;
         this.mesh.setBaseColor("#7fffd4");
-        var userAgent = window.navigator.userAgent.toLowerCase();
-        if (userAgent.indexOf('chrome') == -1) {
-            this.mesh.texture = new Texture('image/earth.png');
-        }
+        // var userAgent = window.navigator.userAgent.toLowerCase();
+        // if (userAgent.indexOf('chrome') == -1) {
+        //     this.mesh.texture = new Texture('image/earth.png');
+        // }
         this.addEventListener('enterframe', function(e){
             if(game.score < 50){
                 this.az -= 0.3;
